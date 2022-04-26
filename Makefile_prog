@@ -17,7 +17,8 @@ BUNNYFLAG = -llapin -lsfml-graphics -lsfml-audio -lsfml-window \
 -lopencv_objdetect -lopencv_video -lopencv_core -lavcall -lusb
 
 #LIBRARY VARIABLE
-LIBPATH = lib/
+# Don't leave LIBPATH varaible content blank or the compilation goes wrong
+LIBPATH = the_dir_where_libs_are/
 LIBFLAG =
 # LIBFLAG = -L $(LIBPATH)
 
