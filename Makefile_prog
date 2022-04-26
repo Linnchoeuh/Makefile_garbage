@@ -1,4 +1,4 @@
-NAME = dsh
+NAME = prog
 CC = gcc
 SRC = $(shell find ./ -name "*.c")
 OBJ = $(SRC:.c=.o)
