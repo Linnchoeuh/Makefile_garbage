@@ -12,12 +12,14 @@ SUB_DIR_INCLUDE = $(shell find $(INCLUDE) -type d -printf "-I%h/%f/ ")
 CFLAG = -g3 -std=c11
 ERRFLAG = -Wextra -Wall -Werror
 # BUNNYFLAG =
-BUNNYFLAG = -llapin -lsfml-graphics -lsfml-audio -lsfml-window -lsfml-system -lstdc++ \
--lm -ldl -lpthread -lopencv_imgproc -lopencv_objdetect -lopencv_video -lopencv_core -lavcall -lusb
+BUNNYFLAG = -llapin -lsfml-graphics -lsfml-audio -lsfml-window \
+-lsfml-system -lstdc++ -lm -ldl -lpthread -lopencv_imgproc \
+-lopencv_objdetect -lopencv_video -lopencv_core -lavcall -lusb
 
 #LIBRARY VARIABLE
 LIBPATH = lib/
-LIBFLAG = -L $(LIBPATH) -lprinto -lterminal
+LIBFLAG =
+# LIBFLAG = -L $(LIBPATH)
 
 #DON'T TOUCH
 ECHO = /bin/echo -e
