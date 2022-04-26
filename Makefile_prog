@@ -17,7 +17,7 @@ BUNNYFLAG = -llapin -lsfml-graphics -lsfml-audio -lsfml-window \
 -lopencv_objdetect -lopencv_video -lopencv_core -lavcall -lusb
 
 #LIBRARY VARIABLE
-# Don't leave LIBPATH varaible content blank or the compilation goes wrong
+# Don't leave LIBPATH variable content blank or the compilation goes wrong.
 LIBPATH = the_dir_where_libs_are/
 LIBFLAG =
 # LIBFLAG = -L $(LIBPATH)
@@ -40,13 +40,14 @@ all:$(NAME)
 
 %.o : %.c
 	@if [ "$(findstring $(LIBPATH),$@)" != $(LIBPATH) ]; then \
-	$(CC) -o $@ -c $< -I$(INCLUDE) $(CFLAG) $(ERRFLAG) $(LIBFLAG) $(BUNNYFLAG) && \
+	$(CC) -o $@ -c $< $(SUB_DIR_INCLUDE) $(CFLAG) $(ERRFLAG) \
+	$(LIBFLAG) $(BUNNYFLAG) && \
 	$(ECHO) $(BLINK) "[OK]"$(SBLINK) $(PINK) $< $(DEFLT) || \
 	$(ECHO) $(RED) "[KO]" $(PINK) $< $(DEFLT); fi;
 
 $(NAME):$(OBJ)
 	@ $(CC) $(shell find ./ -name "*.o") -o $(NAME) \
-	-I$(INCLUDE) $(CFLAG) $(ERRFLAG) $(LIBFLAG) $(BUNNYFLAG) && \
+	$(SUB_DIR_INCLUDE) $(CFLAG) $(ERRFLAG) $(LIBFLAG) $(BUNNYFLAG) && \
 	$(ECHO) $(BLINK) "[OK]"$(SBLINK) $(PINK) $(NAME) $(DEFLT) || \
 	$(ECHO) $(RED) "[KO]" $(TEAL) $(NAME) $(DEFLT) \
 	It may doesn't work because you didn't compile libs, then try : make lib
