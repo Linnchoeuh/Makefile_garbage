@@ -2,11 +2,18 @@ NAME = dsh
 CC = gcc
 SRC = $(shell find ./ -name "*.c")
 OBJ = $(SRC:.c=.o)
+
+#INCLUDE
 INCLUDE = ./include
+# SUB_DIR_INCLUDE = -I$(INCLUDE)
+SUB_DIR_INCLUDE = $(shell find $(INCLUDE) -type d -printf "-I%h/%f/ ")
 
 #FLAGS
 CFLAG = -g3 -std=c11
 ERRFLAG = -Wextra -Wall -Werror
+# BUNNYFLAG =
+BUNNYFLAG = -llapin -lsfml-graphics -lsfml-audio -lsfml-window -lsfml-system -lstdc++ \
+-lm -ldl -lpthread -lopencv_imgproc -lopencv_objdetect -lopencv_video -lopencv_core -lavcall -lusb
 
 #LIBRARY VARIABLE
 LIBPATH = lib/
@@ -30,13 +37,13 @@ all:$(NAME)
 
 %.o : %.c
 	@if [ "$(findstring $(LIBPATH),$@)" != $(LIBPATH) ]; then \
-	$(CC) -o $@ -c $< -I$(INCLUDE) $(CFLAG) $(ERRFLAG) $(LIBFLAG) && \
+	$(CC) -o $@ -c $< -I$(INCLUDE) $(CFLAG) $(ERRFLAG) $(LIBFLAG) $(BUNNYFLAG) && \
 	$(ECHO) $(BLINK) "[OK]"$(SBLINK) $(PINK) $< $(DEFLT) || \
 	$(ECHO) $(RED) "[KO]" $(PINK) $< $(DEFLT); fi;
 
 $(NAME):$(OBJ)
 	@ $(CC) $(shell find ./ -name "*.o") -o $(NAME) \
-	-I$(INCLUDE) $(CFLAG) $(ERRFLAG) $(LIBFLAG) && \
+	-I$(INCLUDE) $(CFLAG) $(ERRFLAG) $(LIBFLAG) $(BUNNYFLAG) && \
 	$(ECHO) $(BLINK) "[OK]"$(SBLINK) $(PINK) $(NAME) $(DEFLT) || \
 	$(ECHO) $(RED) "[KO]" $(TEAL) $(NAME) $(DEFLT) \
 	It may doesn't work because you didn't compile libs, then try : make lib
