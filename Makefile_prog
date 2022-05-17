@@ -11,10 +11,10 @@ SUB_DIR_INCLUDE = $(shell find $(INCLUDE) -type d -printf "-I%h/%f/ ")
 #FLAGS
 CFLAG = -g3 -std=c11
 ERRFLAG = -Wextra -Wall -Werror
-# BUNNYFLAG =
-BUNNYFLAG = -llapin -lsfml-graphics -lsfml-audio -lsfml-window \
--lsfml-system -lstdc++ -lm -ldl -lpthread -lopencv_imgproc \
--lopencv_objdetect -lopencv_video -lopencv_core -lavcall -lusb
+BUNNYFLAG =
+# BUNNYFLAG = -llapin -lsfml-graphics -lsfml-audio -lsfml-window \
+# -lsfml-system -lstdc++ -lm -ldl -lpthread -lopencv_imgproc \
+# -lopencv_objdetect -lopencv_video -lopencv_core -lavcall -lusb
 
 #LIBRARY VARIABLE
 # Don't leave LIBPATH variable content blank or the compilation goes wrong.
