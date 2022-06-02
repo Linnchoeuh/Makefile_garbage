@@ -11,17 +11,14 @@ SUB_DIR_INCLUDE = $(shell find $(INCLUDE) -type d -printf "-I%h/%f/ ")
 #FLAGS
 CFLAG = -g3 -std=c11
 ERRFLAG = -Wextra -Wall -Werror
-BUNNYFLAG =
-# BUNNYFLAG = -llapin -lsfml-graphics -lsfml-audio -lsfml-window \
-# -lsfml-system -lstdc++ -lm -ldl -lpthread -lopencv_imgproc \
-# -lopencv_objdetect -lopencv_video -lopencv_core -lavcall -lusb
-
-#LIBRARY VARIABLE
+BUNNYFLAG = -llapin -lsfml-graphics -lsfml-audio -lsfml-window \
+-lsfml-system -lstdc++ -lm -ldl -lpthread -lopencv_imgproc \
+-lopencv_objdetect -lopencv_video -lopencv_core -lavcall -lusb
+# LIBRARY VARIABLE
 # Don't leave LIBPATH variable content blank or the compilation goes wrong.
 LIBPATH = the_dir_where_libs_are/
-LIBFLAG =
+LIBFLAG = $(shell find ./ -name "*.a")
 # LIBFLAG = -L $(LIBPATH)
-
 #DON'T TOUCH
 ECHO = /bin/echo -e
 LIBSDIRECTORIES = $(shell find $(LIBPATH)*/ -maxdepth 0 -type d -printf "$(LIBPATH)%f ")
@@ -41,7 +38,7 @@ all:$(NAME)
 %.o : %.c
 	@if [ "$(findstring $(LIBPATH),$@)" != $(LIBPATH) ]; then \
 	$(CC) -o $@ -c $< $(SUB_DIR_INCLUDE) $(CFLAG) $(ERRFLAG) \
-	$(LIBFLAG) $(BUNNYFLAG) && \
+	$(BUNNYFLAG) && \
 	$(ECHO) $(BLINK) "[OK]"$(SBLINK) $(PINK) $< $(DEFLT) || \
 	$(ECHO) $(RED) "[KO]" $(PINK) $< $(DEFLT); fi;
 
@@ -49,8 +46,10 @@ $(NAME):$(OBJ)
 	@ $(CC) $(shell find ./ -name "*.o") -o $(NAME) \
 	$(SUB_DIR_INCLUDE) $(CFLAG) $(ERRFLAG) $(LIBFLAG) $(BUNNYFLAG) && \
 	$(ECHO) $(BLINK) "[OK]"$(SBLINK) $(PINK) $(NAME) $(DEFLT) || \
-	$(ECHO) $(RED) "[KO]" $(TEAL) $(NAME) $(DEFLT) \
-	It may doesn't work because you didn't compile libs, then try : make lib
+	($(ECHO) $(RED) "[KO]" $(TEAL) $(NAME) $(DEFLT) &&\
+	$(ECHO) $(RED) \
+		It may doesn't work because you didn't compile libs, \
+		then try : make lib $(DEFLT))
 
 clean:
 	@ find -name "*.o" -delete && find -name "*~" -delete && \
@@ -65,7 +64,7 @@ fclean:
         	-or -name "*~" -delete \
 			-or -name "vgcore*" -delete
 	@$(ECHO) $(GREEN) "All temporal file deleted!" $(DEFLT)
-	@find -name $(NAME) -delete
+	@find -maxdepth 1 -name $(NAME) -delete
 	@$(ECHO) $(GREEN) "Executable deleted!" $(DEFLT)
 
 re: 		fclean all
@@ -82,12 +81,18 @@ uninstall:
 lib: FORCE
 	@for path in $(LIBSDIRECTORIES); do \
 		$(ECHO) $(BLINK)$(BLUE)" [COMPILING LIBRARY : $$path]"$(DEFLT); \
-		cd $$path && make re && mv *.a ../ && \
-		cp $(INCLUDE)/*.h ../../include && cd ../../; \
+		cd $$path && \
+		make re && \
+		a=$$(find -name "*.a" -printf '../../$(INCLUDE)/%f' | sed 's/\.[[:alpha:]]*$$//') && \
+		rm -d -r -f $$a && \
+		cp -r ./include ../../$(INCLUDE) && \
+		mv ../../$(INCLUDE)/include $$a && \
+		mv *.a ../../ && \
+		cd ../../; \
 	done
 
 libclean:
-	@rm -f $(LIBPATH)*.a
+	@rm -f ./*.a
 	@$(ECHO) $(GREEN) "[.a static libraries files deleted.]" $(DEFLT)
 	@for path in $(LIBSDIRECTORIES); do \
 		$(ECHO) $(BLINK)$(BLUE)" [CLEANING LIBRARY : $$path]"$(DEFLT); \
