@@ -1,75 +1,77 @@
-NAME = prog
+NAME = fe
 CC = gcc
-SRC = $(shell find ./ -name "*.c")
+SRC = $(shell find ./ -name "*.c" -not -path "./lib/*")
 OBJ = $(SRC:.c=.o)
 
 #INCLUDE
-INCLUDE = ./include
-# SUB_DIR_INCLUDE = -I$(INCLUDE)
-SUB_DIR_INCLUDE = $(shell find $(INCLUDE) -type d -printf "-I%h/%f/ ")
+INCLUDE = $(shell find ./include/ -type d)
+GCC_INCLUDE_PATH = $(foreach dir,$(INCLUDE),-I$(dir))
+
+#LIB
+LIB = ./lib/
+LIB_FLAG = -lprinto
+LIB_INCLUDE_DIR = ./include/
+GCC_LIB_PATH = $(foreach dir,$(LIB),-L$(dir))
+CLEAN_LIB_EXCLUDE = $(foreach dir,$(LIB),-not -path "$(dir)*")
+LIBSDIRECTORIES = $(shell find $(LIB)*/ -maxdepth 0 -type d -printf "$(LIBPATH)%f ")
 
 #FLAGS
-CFLAG = -g3 -std=c11
-ERRFLAG = -Wextra -Wall -Werror
-BUNNYFLAG = -llapin -lsfml-graphics -lsfml-audio -lsfml-window \
+FLAGS = -g3 -std=c11 -Wextra -Wall -Werror \
+-llapin -lsfml-graphics -lsfml-audio -lsfml-window \
 -lsfml-system -lstdc++ -lm -ldl -lpthread -lopencv_imgproc \
 -lopencv_objdetect -lopencv_video -lopencv_core -lavcall -lusb
-# LIBRARY VARIABLE
-# Don't leave LIBPATH variable content blank or the compilation goes wrong.
-LIBPATH = the_dir_where_libs_are/
-LIBFLAG = $(shell find ./ -name "*.a")
-# LIBFLAG = -L $(LIBPATH)
-#DON'T TOUCH
-ECHO = /bin/echo -e
-LIBSDIRECTORIES = $(shell find $(LIBPATH)*/ -maxdepth 0 -type d -printf "$(LIBPATH)%f ")
+ECHO = echo -e
 
 DEFLT	=	"\033[00m"
 PINK	=	"\033[0;36m"
 GREEN	=	"\033[1;32m"
 TEAL	=	"\033[1;36m"
-RED		=	"\033[0;31m"
+RED 	=	"\033[0;31m"
 BLUE	=	"\033[34m"
+PURPLE	=	"\033[0;35m"
 BLINK 	= 	"\033[1;92m"
 SBLINK	= 	"\033[0m"
 INVERT  =	"\033[7m"
 
-all:$(NAME)
+all:
+	@make object -j32 && make build
 
+object:$(NAME)
 %.o : %.c
-	@if [ "$(findstring $(LIBPATH),$@)" != $(LIBPATH) ]; then \
-	$(CC) -o $@ -c $< $(SUB_DIR_INCLUDE) $(CFLAG) $(ERRFLAG) \
-	$(BUNNYFLAG) && \
+	@if [ -f $@ ]; then\
+		rm $@;\
+	fi
+	@$(CC) -o $@ -c $< $(GCC_INCLUDE_PATH) $(GCC_LIB_PATH) \
+	$(LIB_FLAG) $(FLAGS) && \
 	$(ECHO) $(BLINK) "[OK]"$(SBLINK) $(PINK) $< $(DEFLT) || \
-	$(ECHO) $(RED) "[KO]" $(PINK) $< $(DEFLT); fi;
-
+	$(ECHO) $(RED) "[KO]" $(PINK) $< $(DEFLT);
 $(NAME):$(OBJ)
-	@ $(CC) $(shell find ./ -name "*.o") -o $(NAME) \
-	$(SUB_DIR_INCLUDE) $(CFLAG) $(ERRFLAG) $(LIBFLAG) $(BUNNYFLAG) && \
+	@$(ECHO) $(BLUE) "[END]"$(DEFLT)
+
+build:
+	@$(CC) $(OBJ) -o $(NAME) $(GCC_INCLUDE_PATH) $(GCC_LIB_PATH) \
+	$(LIB_FLAG) $(FLAGS) && \
 	$(ECHO) $(BLINK) "[OK]"$(SBLINK) $(PINK) $(NAME) $(DEFLT) || \
-	($(ECHO) $(RED) "[KO]" $(TEAL) $(NAME) $(DEFLT) &&\
-	$(ECHO) $(RED) \
-		It may doesn't work because you didn't compile libs, \
-		then try : make lib $(DEFLT))
+	$(ECHO) $(RED) "[KO]" $(PINK)$(NAME)$(DEFLT);
 
 clean:
-	@ find -name "*.o" -delete && find -name "*~" -delete && \
-	$(ECHO) $(BLINK) "[CLEAN SUCCESS]" $(DEFLT)
+	@find . -name "*.o" $(CLEAN_LIB_EXCLUDE) -delete; \
+	find -name "*~" -delete && \
+	$(ECHO) $(BLINK) "[CLEAN DONE]" $(DEFLT)
 
-fclean:
-	@find . -name "*.o" -not -path "./$(LIBPATH)*" -delete \
-			-name "*.a" -not -path "./$(LIBPATH)*" -delete \
-			-or -name "*.exe" -delete \
-        	-or -name "a.out" -delete \
-			-or -name "*.so" -delete  \
-        	-or -name "*~" -delete \
-			-or -name "vgcore*" -delete
+fclean: clean
+	@find .	-name "*.a" $(CLEAN_LIB_EXCLUDE) -delete \
+		-or -name "*.exe" -delete \
+		-or -name "a.out" -delete \
+		-or -name "*.so" -delete  \
+		-or -name "vgcore*" -delete
 	@$(ECHO) $(GREEN) "All temporal file deleted!" $(DEFLT)
 	@find -maxdepth 1 -name $(NAME) -delete
 	@$(ECHO) $(GREEN) "Executable deleted!" $(DEFLT)
 
-re: 		fclean all
+re: fclean all
 
-install:	all
+install: all
 	@sudo mv $(NAME) /usr/bin/
 	@$(ECHO) $(GREEN) "Program installed!" $(DEFLT)
 
@@ -77,33 +79,34 @@ uninstall:
 	@sudo rm -i /usr/bin/$(NAME)
 	@$(ECHO) $(GREEN) "Program deleted!" $(DEFLT)
 
-
 lib: FORCE
-	@for path in $(LIBSDIRECTORIES); do \
-		$(ECHO) $(BLINK)$(BLUE)" [COMPILING LIBRARY : $$path]"$(DEFLT); \
-		cd $$path && \
-		make re && \
-		a=$$(find -name "*.a" -printf '../../$(INCLUDE)/%f' | sed 's/\.[[:alpha:]]*$$//') && \
-		rm -d -r -f $$a && \
-		cp -r ./include ../../$(INCLUDE) && \
-		mv ../../$(INCLUDE)/include $$a && \
-		mv *.a ../../ && \
-		cd ../../; \
+	@for lib_dir in $(LIB); do \
+		$(ECHO) $(BLINK)$(PURPLE)" [COMPILING LIBRARIES IN $$lib_dir]"$(DEFLT); \
+		dirs=$$(find $$lib_dir -maxdepth 1 -mindepth 1 -type d); \
+		for lib_path in $$dirs; do \
+			$(ECHO) $(BLINK)$(BLUE)" [COMPILING LIBRARY : $$lib_path]"$(DEFLT); \
+			make -C $$lib_path; \
+			lib_name=$$(basename $$lib_path); \
+			mkdir $(LIB_INCLUDE_DIR)$$lib_name; \
+			cp -r $$lib_path/include/* $(LIB_INCLUDE_DIR)$$lib_name; \
+			mv $$lib_path/*.a $$lib_dir; \
+		done \
 	done
 
-libclean:
-	@rm -f ./*.a
+lib_clean:
+	@find .	-name "*.a" -delete
 	@$(ECHO) $(GREEN) "[.a static libraries files deleted.]" $(DEFLT)
-	@for path in $(LIBSDIRECTORIES); do \
-		$(ECHO) $(BLINK)$(BLUE)" [CLEANING LIBRARY : $$path]"$(DEFLT); \
-		cd $$path && make fclean && cd ../../; \
+	@for lib_dir in $(LIB); do \
+		$(ECHO) $(BLINK)$(PURPLE)" [CLEANING LIBRARIES IN $$lib_dir]"$(DEFLT); \
+		dirs=$$(find $$lib_dir -maxdepth 1 -mindepth 1 -type d); \
+		for lib_path in $$dirs; do \
+			$(ECHO) $(BLINK)$(BLUE)" [CLEANING LIBRARY : $$lib_path]"$(DEFLT); \
+			make -C $$lib_path fclean; \
+			lib_name=$$(basename $$lib_path); \
+			rm -rf $(LIB_INCLUDE_DIR)$$lib_name; \
+		done \
 	done
 
-libupdate:
-	@for path in $(LIBSDIRECTORIES); do \
-		$(ECHO) $(BLINK)$(BLUE)" [CHECKING UPDATE OF : $$path]"$(DEFLT); \
-		cd $$path && git pull && cd ../../; \
-	done
-	@make lib
+lib_re: lib_clean lib
 
 FORCE:
