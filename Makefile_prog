@@ -1,25 +1,34 @@
-NAME = fe
+NAME = mini_printf
 CC = gcc
-SRC = $(shell find ./ -name "*.c" -not -path "./lib/*")
-OBJ = $(SRC:.c=.o)
 
 #INCLUDE
-INCLUDE = $(shell find ./include/ -type d)
+INCLUDE = ../include/
 GCC_INCLUDE_PATH = $(foreach dir,$(INCLUDE),-I$(dir))
 
 #LIB
-LIB = ./lib/
-LIB_FLAG = -lprinto
-LIB_INCLUDE_DIR = ./include/
+LIB = ../lib/
+LIB_FLAG = -lmy
+LIB_INCLUDE_DIR = ../include/
 GCC_LIB_PATH = $(foreach dir,$(LIB),-L$(dir))
 CLEAN_LIB_EXCLUDE = $(foreach dir,$(LIB),-not -path "$(dir)*")
-LIBSDIRECTORIES = $(shell find $(LIB)*/ -maxdepth 0 -type d -printf "$(LIBPATH)%f ")
+
+#TEST
+TEST_NAME = test_$(NAME)
+TEST_FOLDER = ../tests/
+TEST_FOLDER_GCC_EXLUDE = $(foreach dir,$(TEST_FOLDER),-not -path "$(dir)*")
+FILE_TO_EXCLUDE = main.c
+EXCLUDED_FIND_FILE = $(foreach file,$(FILE_TO_EXCLUDE),-not -iname "$(file)")
+TEST_FILE = \
+	$(shell find ../ -name "*.c" $(EXCLUDED_FIND_FILE) $(CLEAN_LIB_EXCLUDE))
+
+#SRC
+SRC = $(shell find ../ -name "*.c" $(CLEAN_LIB_EXCLUDE) \
+$(TEST_FOLDER_GCC_EXLUDE))
+OBJ = $(SRC:.c=.o)
+OUTPUT = ../
 
 #FLAGS
-FLAGS = -g3 -std=c11 -Wextra -Wall -Werror \
--llapin -lsfml-graphics -lsfml-audio -lsfml-window \
--lsfml-system -lstdc++ -lm -ldl -lpthread -lopencv_imgproc \
--lopencv_objdetect -lopencv_video -lopencv_core -lavcall -lusb
+FLAGS = -g3 -std=c11 -Wextra -Wall -Werror
 ECHO = echo -e
 
 DEFLT	=	"\033[00m"
@@ -108,5 +117,21 @@ lib_clean:
 	done
 
 lib_re: lib_clean lib
+
+tests_run: lib
+	@find .	-name "*.gcno" -delete \
+		-or -name "*.gcda" -delete \
+		-or -name "*.gcov" -delete
+	@$(CC) -o $(TEST_NAME) $(TEST_FILE) $(GCC_INCLUDE_PATH) \
+	$(GCC_LIB_PATH) $(LIB_FLAG) $(FLAGS) --coverage -lcriterion && \
+	./$(TEST_NAME);
+
+coverage:
+	@gcovr -r ../ --exclude $(TEST_FOLDER)
+
+branches:
+	@gcovr -r ../ --branches --exclude $(TEST_FOLDER)
+
+test: tests_run coverage branches
 
 FORCE:
